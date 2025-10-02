@@ -1,0 +1,56 @@
+executable("main") {
+  sources = [
+    "main.cpp",
+  ]
+
+  if (is_win) {
+    cflags = [ 
+      "/MT",
+    ]
+
+    defines = [
+      "UNICODE",
+      "_UNICODE",
+    ]
+
+    ldflags = [
+      "/OPT:REF",
+      "/OPT:ICF",
+      "/LTCG",
+      "/SUBSYSTEM:WINDOWS",
+      "glfw3.lib",
+      "glad.lib",
+      "user32.lib",
+      "gdi32.lib",
+      "shell32.lib",
+      "opengl32.lib",
+    ]
+
+    if (target_cpu == "x86") {
+      include_dirs = [ "D:/Tools/vcpkg/installed/x86-windows-static/include" ]
+      ldflags += [ 
+        "/MACHINE:X86",
+        "/LIBPATH:C:\\Program Files (x86)\\Windows Kits\\10\\Lib\\10.0.26100.0\\um\\x86",
+        "/LIBPATH:C:\\Program Files (x86)\\Windows Kits\\10\\Lib\\10.0.26100.0\\ucrt\\x86",
+        "/LIBPATH:D:/Tools/vcpkg/installed/x86-windows-static/lib",
+      ]
+    } else if (target_cpu == "x64") {
+      include_dirs = [ "D:/Tools/vcpkg/installed/x64-windows-static/include" ]
+      ldflags += [ 
+        "/MACHINE:X64",
+        "/LIBPATH:C:\\Program Files (x86)\\Windows Kits\\10\\Lib\\10.0.26100.0\\um\\x64",
+        "/LIBPATH:C:\\Program Files (x86)\\Windows Kits\\10\\Lib\\10.0.26100.0\\ucrt\\x64",
+        "/LIBPATH:D:/Tools/vcpkg/installed/x64-windows-static/lib",
+      ]
+    }
+  } else if (is_linux) {
+    defines += [ 
+      "_GNU_SOURCE",
+      "__linux__",
+    ]
+
+    ldflags += [
+      "-Wl",
+    ]
+  }
+}

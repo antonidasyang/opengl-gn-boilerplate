@@ -1,0 +1,94 @@
+# Copyright 2014 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+# Clang toolchain for Windows
+toolchain("clang") {
+  # Clang installation path
+  clang_base_path = "C:/Program Files/LLVM"
+  clang_bin_path = "$clang_base_path/bin"
+  
+  # Use clang-cl for Windows compatibility
+  cc = "$clang_bin_path/clang-cl.exe"
+  cxx = "$clang_bin_path/clang-cl.exe"
+  ar = "$clang_bin_path/llvm-lib.exe"
+  link = "$clang_bin_path/lld-link.exe"
+  
+  # Architecture-specific compiler flags
+  # Use --target to specify the target architecture
+  if (target_cpu == "x86") {
+    cc_flags = "--target=i686-pc-windows-msvc"
+    cxx_flags = "--target=i686-pc-windows-msvc"
+  } else if (target_cpu == "x64") {
+    cc_flags = "--target=x86_64-pc-windows-msvc"
+    cxx_flags = "--target=x86_64-pc-windows-msvc"
+  } else {
+    cc_flags = ""
+    cxx_flags = ""
+  }
+
+  tool("cc") {
+    depfile = "{{output}}.d"
+    command = "$cc /nologo /showIncludes /FC /c $cc_flags {{defines}} {{include_dirs}} {{cflags}} {{cflags_c}} /Fo{{output}} {{source}}"
+    depsformat = "msvc"
+    description = "CC {{output}}"
+    outputs = [
+      "{{source_out_dir}}/{{target_output_name}}.{{source_name_part}}.obj",
+    ]
+  }
+
+  tool("cxx") {
+    depfile = "{{output}}.d"
+    command = "$cxx /nologo /showIncludes /FC /c $cxx_flags {{defines}} {{include_dirs}} {{cflags}} {{cflags_cc}} /Fo{{output}} {{source}}"
+    depsformat = "msvc"
+    description = "CXX {{output}}"
+    outputs = [
+      "{{source_out_dir}}/{{target_output_name}}.{{source_name_part}}.obj",
+    ]
+  }
+
+  tool("alink") {
+    rspfile = "{{output}}.rsp"
+    command = "$ar /nologo /out:{{output}} @$rspfile"
+    description = "LIB {{target_output_name}}{{output_extension}}"
+    rspfile_content = "{{inputs}}"
+    outputs = [
+      "{{target_out_dir}}/{{target_output_name}}{{output_extension}}",
+    ]
+    default_output_extension = ".lib"
+  }
+
+  tool("solink") {
+    rspfile = "{{output}}.rsp"
+    command = "$link /nologo /DLL {{ldflags}} /out:{{output}} @$rspfile {{solibs}} {{libs}}"
+    description = "LINK {{output}}"
+    rspfile_content = "{{inputs}}"
+    outputs = [
+      "{{output_dir}}/{{target_output_name}}{{output_extension}}",
+    ]
+    default_output_extension = ".dll"
+    default_output_dir = "{{root_out_dir}}"
+  }
+
+  tool("link") {
+    rspfile = "{{output}}.rsp"
+    command = "$link /nologo {{ldflags}} /out:{{output}} @$rspfile {{solibs}} {{libs}}"
+    description = "LINK {{output}}"
+    rspfile_content = "{{inputs}}"
+    outputs = [
+      "{{output_dir}}/{{target_output_name}}{{output_extension}}",
+    ]
+    default_output_extension = ".exe"
+    default_output_dir = "{{root_out_dir}}"
+  }
+
+  tool("stamp") {
+    command = "cmd /c type nul > {{output}}"
+    description = "STAMP {{output}}"
+  }
+
+  tool("copy") {
+    command = "cmd /c copy /y {{source}} {{output}}"
+    description = "COPY {{source}} {{output}}"
+  }
+}
