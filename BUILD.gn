@@ -3,9 +3,11 @@ executable("main") {
     "main.cpp",
   ]
 
+  include_dirs = [ "." ]
+
   if (is_win) {
     cflags = [ 
-      "/MT",
+      "/EHsc",  # 启用 C++ 异常处理
     ]
 
     defines = [
@@ -14,9 +16,6 @@ executable("main") {
     ]
 
     ldflags = [
-      "/OPT:REF",
-      "/OPT:ICF",
-      "/LTCG",
       "/SUBSYSTEM:WINDOWS",
       "glfw3.lib",
       "glad.lib",
@@ -26,21 +25,52 @@ executable("main") {
       "opengl32.lib",
     ]
 
+    if (is_debug) {
+      cflags += [
+        "/MTd",
+        "/Zi",
+        "/Od",
+        "/Fd",
+      ]
+
+      ldflags += [
+        "/DEBUG",
+      ]
+    } else {
+      cflags += [
+        "/MT",
+        "/O2",
+      ]
+
+      ldflags += [
+        "/OPT:REF",
+        "/OPT:ICF",
+        "/LTCG",
+      ]
+    }
+
+    vcpkg_root = getenv("VCPKG_ROOT")
+    assert(vcpkg_root != "", "请先设置环境变量 VCPKG_ROOT")
+
     if (target_cpu == "x86") {
-      include_dirs = [ "D:/Tools/vcpkg/installed/x86-windows-static/include" ]
+      include_dirs += [ 
+        vcpkg_root + "/installed/x86-windows-static/include",
+      ]
       ldflags += [ 
         "/MACHINE:X86",
         "/LIBPATH:C:\\Program Files (x86)\\Windows Kits\\10\\Lib\\10.0.26100.0\\um\\x86",
         "/LIBPATH:C:\\Program Files (x86)\\Windows Kits\\10\\Lib\\10.0.26100.0\\ucrt\\x86",
-        "/LIBPATH:D:/Tools/vcpkg/installed/x86-windows-static/lib",
+        "/LIBPATH:" + vcpkg_root + "/installed/x86-windows-static/lib",
       ]
     } else if (target_cpu == "x64") {
-      include_dirs = [ "D:/Tools/vcpkg/installed/x64-windows-static/include" ]
+      include_dirs += [ 
+        vcpkg_root + "/installed/x64-windows-static/include",
+      ]
       ldflags += [ 
         "/MACHINE:X64",
         "/LIBPATH:C:\\Program Files (x86)\\Windows Kits\\10\\Lib\\10.0.26100.0\\um\\x64",
         "/LIBPATH:C:\\Program Files (x86)\\Windows Kits\\10\\Lib\\10.0.26100.0\\ucrt\\x64",
-        "/LIBPATH:D:/Tools/vcpkg/installed/x64-windows-static/lib",
+        "/LIBPATH:" + vcpkg_root + "/installed/x64-windows-static/lib",
       ]
     }
   } else if (is_linux) {
